@@ -4,7 +4,6 @@ set -e
 ENVIRONMENT=${1:-dev}
 PROJECT_NAME="twin"
 BACKEND_BUCKET="${PROJECT_NAME}-terraform-state-${AWS_ACCOUNT_ID}"
-BACKEND_TABLE="${PROJECT_NAME}-terraform-locks"
 BACKEND_KEY="${PROJECT_NAME}/${ENVIRONMENT}/terraform.tfstate"
 
 echo "🚀 Deploying twin to $ENVIRONMENT..."
@@ -51,13 +50,18 @@ echo "✓ Created lambda-deployment.zip ($SIZE)"
 cd ..
 
 # Check and create Terraform backend if needed
-echo "🔧 Checking Terraform backend..."
+echo "🔧 Setting up Terraform backend..."
 if [ -d "terraform-backend" ]; then
   echo "📦 Creating S3 backend bucket and DynamoDB table..."
   cd terraform-backend
   terraform init
-  terraform apply -auto-approve
+  terraform apply -auto-approve \
+    -var="region=${DEFAULT_AWS_REGION}" \
+    -var="project_name=${PROJECT_NAME}"
   cd ..
+  echo "✓ Backend resources created"
+else
+  echo "⚠️  terraform-backend directory not found, assuming backend already exists"
 fi
 
 # Initialize Terraform with S3 backend
@@ -67,7 +71,6 @@ terraform init -reconfigure \
   -backend-config="bucket=${BACKEND_BUCKET}" \
   -backend-config="key=${BACKEND_KEY}" \
   -backend-config="region=${DEFAULT_AWS_REGION}" \
-  -backend-config="dynamodb_table=${BACKEND_TABLE}" \
   -backend-config="encrypt=true"
 
 # Select or create workspace
@@ -108,4 +111,4 @@ cd ..
 echo "✅ Deployment complete!"
 echo ""
 echo "🔗 Frontend URL: $(cd terraform && terraform output -raw cloudfront_url)"
-echo "🔗 API URL: $(cd terraform && terraform output -raw api_ur
+echo "🔗 API URL: $(cd terraform && terraform output -raw api_url)"
