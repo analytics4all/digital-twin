@@ -53,16 +53,30 @@ cd ..
 # Check and create Terraform backend if needed
 echo "🔧 Setting up Terraform backend..."
 if [ -d "terraform-backend" ]; then
-  echo "📦 Creating S3 backend bucket and DynamoDB table..."
+  echo "📦 Ensuring S3 backend bucket and DynamoDB table exist..."
   cd terraform-backend
-  terraform init
-  terraform apply -auto-approve \
-    -var="region=${DEFAULT_AWS_REGION}" \
-    -var="project_name=${PROJECT_NAME}"
+  
+  # Check if backend bucket exists
+  if aws s3api head-bucket --bucket "${BACKEND_BUCKET}" 2>/dev/null; then
+    echo "✓ Backend S3 bucket already exists: ${BACKEND_BUCKET}"
+  else
+    echo "Creating backend infrastructure..."
+    terraform init
+    terraform apply -auto-approve \
+      -var="region=${DEFAULT_AWS_REGION}" \
+      -var="project_name=${PROJECT_NAME}"
+  fi
+  
   cd ..
-  echo "✓ Backend resources created"
 else
-  echo "⚠️  terraform-backend directory not found, assuming backend already exists"
+  echo "⚠️  terraform-backend directory not found"
+  # Check if bucket exists anyway
+  if aws s3api head-bucket --bucket "${BACKEND_BUCKET}" 2>/dev/null; then
+    echo "✓ Backend S3 bucket already exists: ${BACKEND_BUCKET}"
+  else
+    echo "❌ Backend bucket does not exist and terraform-backend directory not found"
+    exit 1
+  fi
 fi
 
 # Initialize Terraform with S3 backend
