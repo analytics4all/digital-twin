@@ -15,8 +15,28 @@ echo "📦 Building Lambda package..."
 cd terraform
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 AWS_REGION=${DEFAULT_AWS_REGION:-us-east-2}
+
+# Create backend infrastructure if it doesn't exist
+echo "🔧 Checking Terraform backend..."
+BACKEND_BUCKET="twin-terraform-state-${AWS_ACCOUNT_ID}"
+if ! aws s3 ls "s3://${BACKEND_BUCKET}" 2>/dev/null; then
+    echo "📦 Creating S3 backend bucket and DynamoDB table..."
+    terraform init -backend=false
+    terraform apply \
+      -target="aws_s3_bucket.terraform_state" \
+      -target="aws_s3_bucket_versioning.terraform_state" \
+      -target="aws_s3_bucket_server_side_encryption_configuration.terraform_state" \
+      -target="aws_s3_bucket_public_access_block.terraform_state" \
+      -target="aws_dynamodb_table.terraform_locks" \
+      -var="project_name=${PROJECT_NAME}" \
+      -var="environment=${ENVIRONMENT}" \
+      -auto-approve
+    echo "✅ Backend infrastructure created"
+fi
+
+# Now initialize with backend
 terraform init -input=false \
-  -backend-config="bucket=twin-terraform-state-${AWS_ACCOUNT_ID}" \
+  -backend-config="bucket=${BACKEND_BUCKET}" \
   -backend-config="key=${ENVIRONMENT}/terraform.tfstate" \
   -backend-config="region=${AWS_REGION}" \
   -backend-config="dynamodb_table=twin-terraform-locks" \
@@ -61,3 +81,19 @@ if [ -n "$CUSTOM_URL" ]; then
   echo "🔗 Custom domain  : $CUSTOM_URL"
 fi
 echo "📡 API Gateway    : $API_URL"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
