@@ -2,37 +2,44 @@
 set -e
 
 ENVIRONMENT=${1:-dev}
+PROJECT_NAME="twin"
+BACKEND_BUCKET="${PROJECT_NAME}-terraform-state-${AWS_ACCOUNT_ID}"
+BACKEND_TABLE="${PROJECT_NAME}-terraform-locks"
+BACKEND_KEY="${PROJECT_NAME}/${ENVIRONMENT}/terraform.tfstate"
 
 echo "🚀 Deploying twin to $ENVIRONMENT..."
 
 # Build Lambda package
 echo "📦 Building Lambda package..."
 cd backend
+
+# Install uv for faster dependency management
 python3 -m pip install --upgrade pip uv
+
+# Create virtual environment and install dependencies
 uv venv
 source .venv/bin/activate || . .venv/bin/activate
 uv pip install -r requirements.txt
 
-# Create Lambda deployment package using Docker
+# Create package directory
+rm -rf package
+mkdir -p package
+
+# Install dependencies for Lambda using Docker
+echo "Installing dependencies for Lambda runtime..."
 docker run --rm \
   -v "$PWD":/var/task \
   --entrypoint /bin/bash \
   public.ecr.aws/lambda/python:3.12 \
   -c "pip install -r /var/task/requirements.txt -t /var/task/package/"
 
-echo "Creating Lambda deployment package..."
-cd package
-zip -r ../lambda-deployment.zip .
-cd ..
-
-echo "Installing dependencies for Lambda runtime..."
-pip install -r requirements.txt -t package/
-
+# Copy application files to package
 echo "Copying application files..."
 cp *.py package/ 2>/dev/null || true
 cp -r data package/ 2>/dev/null || true
 cp *.txt package/ 2>/dev/null || true
 
+# Create zip file
 echo "Creating zip file..."
 cd package
 zip -r ../lambda-deployment.zip . -q
@@ -56,7 +63,12 @@ fi
 # Initialize Terraform with S3 backend
 echo "🔄 Initializing Terraform with S3 backend..."
 cd terraform
-terraform init -reconfigure
+terraform init -reconfigure \
+  -backend-config="bucket=${BACKEND_BUCKET}" \
+  -backend-config="key=${BACKEND_KEY}" \
+  -backend-config="region=${DEFAULT_AWS_REGION}" \
+  -backend-config="dynamodb_table=${BACKEND_TABLE}" \
+  -backend-config="encrypt=true"
 
 # Select or create workspace
 echo "🔀 Setting up workspace: $ENVIRONMENT"
@@ -96,19 +108,4 @@ cd ..
 echo "✅ Deployment complete!"
 echo ""
 echo "🔗 Frontend URL: $(cd terraform && terraform output -raw cloudfront_url)"
-echo "🔗 API URL: $(cd terraform && terraform output -raw api_url)"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+echo "🔗 API URL: $(cd terraform && terraform output -raw api_ur

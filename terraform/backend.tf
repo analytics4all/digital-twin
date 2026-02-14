@@ -1,6 +1,10 @@
 terraform {
   backend "s3" {
-    # These values will be set by deployment scripts
-    # For local development, they can be passed via -backend-config
+    # Configuration will be provided via -backend-config flags in deploy.sh
+    # bucket         = "twin-terraform-state-<account-id>"
+    # key            = "twin/<environment>/terraform.tfstate"
+    # region         = "us-east-1"
+    # dynamodb_table = "twin-terraform-locks"
+    # encrypt        = true
   }
 }
