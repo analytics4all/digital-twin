@@ -16,8 +16,9 @@ uv pip install -r requirements.txt
 # Create Lambda deployment package using Docker
 docker run --rm \
   -v "$PWD":/var/task \
+  --entrypoint /bin/bash \
   public.ecr.aws/lambda/python:3.12 \
-  /bin/bash -c "pip install -r /var/task/requirements.txt -t /var/task/package/"
+  -c "pip install -r /var/task/requirements.txt -t /var/task/package/"
 
 echo "Creating Lambda deployment package..."
 cd package
