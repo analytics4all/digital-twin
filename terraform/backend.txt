@@ -1,0 +1,9 @@
+terraform {
+  backend "s3" {
+    bucket         = "twin-terraform-state-103604484159"
+    key            = "env/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "twin-terraform-locks"
+    encrypt        = true
+  }
+}

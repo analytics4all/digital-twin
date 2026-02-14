@@ -2,6 +2,7 @@
 set -e
 
 ENVIRONMENT=${1:-dev}
+DESTROY=${2:-false}
 PROJECT_NAME="twin"
 BACKEND_BUCKET="${PROJECT_NAME}-terraform-state-${AWS_ACCOUNT_ID}"
 BACKEND_KEY="${PROJECT_NAME}/${ENVIRONMENT}/terraform.tfstate"
@@ -76,6 +77,13 @@ terraform init -reconfigure \
 # Select or create workspace
 echo "🔀 Setting up workspace: $ENVIRONMENT"
 terraform workspace select $ENVIRONMENT 2>/dev/null || terraform workspace new $ENVIRONMENT
+
+# Destroy existing resources if requested
+if [ "$DESTROY" = "true" ]; then
+  echo "🗑️  Destroying existing infrastructure..."
+  terraform destroy -var-file=terraform.tfvars -auto-approve || true
+  echo "✓ Existing resources destroyed"
+fi
 
 # Deploy infrastructure
 echo "☁️ Deploying infrastructure to $ENVIRONMENT..."
