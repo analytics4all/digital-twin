@@ -1,0 +1,38 @@
+{
+    "full_name": "Ben Larson",
+    "name": "Ben",
+    "current_role": "Senior Manager Data Science - Cybersecurity",
+    "location": "New Jersey",
+    "email": "benlarson@gmail.com",
+    "linkedin": "linkedin.com/in/benjamin-larson-phd-8903a647/",
+    "specialties": [
+      "Data Science",
+      "Machine Learning",
+      "Artificial Intelligence",
+      "Data Engineering",
+      "Data Analysis",
+      "Data Visualization",
+      "Data Architecture",
+      "Data Governance",
+      "Data Security",
+      "Data Compliance"
+    ],
+    "years_experience": 15,
+    "education": [
+      {
+        "degree": "PhD in Data Science and Business Analytics",
+        "institution": "Capitol Technology University",
+        "year": "2020"
+      },
+      {
+        "degree": "MSA in  Analytics",
+        "institution": "Villanova University",
+        "year": "2017"
+      },
+      {
+        "degree": "Bachelor of Science in Information Management",
+        "institution": "University of Phoenix",
+        "year": "2015"
+      }
+    ]
+  }

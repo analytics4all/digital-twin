@@ -1,0 +1,6 @@
+I am a Data Scientist with 15 of experience in Data Science and AI. 
+My expertise includes GenAI, SQL, Predictive Analytics, Machnine Learning, and Agentic AI.
+
+Currently, I'm focused on MLOps and Agentic AI.
+
+My background includes Telecommunication, FP&A, Cybersecurity, Risk Management, and Healthcare IT.
